@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Romantic Palette */
+    --background: 0 0% 100%; /* White */
+    --foreground: 358 82% 35%; /* Red-dark */
+    --card: 60 100% 97%; /* Cream */
+    --card-foreground: 358 82% 35%;
+    --popover: 60 100% 97%;
+    --popover-foreground: 358 82% 35%;
+    --primary: 358 82% 59%; /* Valentine Red */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 352 100% 88%; /* Blush Pink */
+    --secondary-foreground: 358 82% 35%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 358 82% 59%; /* Valentine Red */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 85%;
+    --input: 60 100% 97%; /* Cream */
+    --ring: 358 82% 59%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  /* Romantic shadows & glows */
+  .romantic-glow {
+    box-shadow: 0 0 30px hsl(358 82% 59% / 0.15), 
+                0 0 60px hsl(358 82% 59% / 0.08);
+  }
+
+  .text-romantic-glow {
+    text-shadow: 0 0 20px hsl(358 82% 59% / 0.4), 
+                 0 0 40px hsl(358 82% 59% / 0.2);
+  }
+
+  /* Romantic gradients */
+  .romantic-gradient {
+    background: linear-gradient(135deg, hsl(352 100% 88% / 0.3), hsl(358 82% 59% / 0.2));
+  }
+
+  .cream-gradient {
+    background: linear-gradient(135deg, hsl(60 100% 97%), hsl(352 100% 88%));
+  }
+
+  /* Romantic animations */
+  .pulse-romantic {
+    animation: pulse-romantic 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-romantic {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  .float-gentle {
+    animation: float-gentle 3s ease-in-out infinite;
+  }
+
+  @keyframes float-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Status bar utilities */
+  .status-bar {
+    @apply fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-border;
+  }
+  /* Romantic button styles */
+  .btn-romantic {
+    @apply px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium transition-all duration-300 hover:shadow-lg active:scale-95;
+  }
+
+  /* Mobile-first responsive */
+  @media (touch: coarse) {
+    body {
+      @apply text-base;
+    }
+  }
+}
+
