@@ -356,13 +356,16 @@ export default function KintsugiExperience({
                 className="rounded-md border border-white/20 bg-black/20 px-2.5 py-1.5 text-xs text-white/90 hover:bg-black/30"
               >
                 <ArrowLeft className="h-4 w-4" />
+              <button
+                onClick={() => {
+                  if (!confirm("Seal this repair and move to the next room?")) return
+                  onComplete()
+                }}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+                title="Go to next room"
+              >
+                Done
               </button>
-            )}
-            <h2 className={`font-serif text-2xl ${allComplete ? "text-amber-900" : "text-white"}`}>
-              The Golden Repair
-            </h2>
-          </div>
-          <div className={`text-xs ${allComplete ? "text-amber-900/80" : "text-white/80"}`}>
             {playerName} + {partnerName}
           </div>
         </div>
@@ -395,14 +398,17 @@ export default function KintsugiExperience({
                         transition={{ type: "spring", stiffness: 140, damping: 20 }}
                       />
                     </div>
+                  <button
+                    onClick={() => {
+                      if (!confirm("Skip this room? Are you sure?")) return
+                      onComplete()
+                    }}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors"
+                    title="Skip this room"
+                  >
+                    <SkipForward className="w-3.5 h-3.5" />
+                    Skip
                   </button>
-                )
-              })}
-            </div>
-
-            {selectedCrack && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mt-4 rounded-lg border p-3 ${allComplete ? "border-amber-300/70 bg-white/70" : "border-amber-300/40 bg-amber-100/10"}`}
               >

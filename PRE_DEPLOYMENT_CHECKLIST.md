@@ -48,7 +48,6 @@ d:\jevousaime\
 │   │   ├── constellation-canvas.tsx
 │   │   ├── library-of-echoes.tsx     (Alternative room)
 │   │   ├── time-capsule-garden.tsx   (Alternative room)
-│   │   ├── valentines-week.tsx        ✅ 7-day challenge system
 │   │   ├── words-and-wishes.tsx       ✅ Final message room
 │   │   └── KintsugiExperience.tsx     (Alternative room)
 │   ├── celebration.tsx
@@ -136,17 +135,6 @@ const {
 
 ## ✅ Component Implementation
 
-### Main Game Room - Valentines Week (`components/rooms/valentines-week.tsx`)
-- [x] Day 1: Proposal challenge
-- [x] Day 2: Chocolate memory matching
-- [x] Day 3: Teddy day stitching
-- [x] Day 4: Promise pinky lock
-- [x] Day 5: Hug day (auto-advance)
-- [x] Day 6: Kiss day with camera
-- [x] Day 7: Valentine's day love letter download
-- [x] Realtime sync across all days
-- [x] Presence detection (paused when partner offline)
-- [x] Progress persistence to database
 
 ### Final Message Room - Words & Wishes (`components/rooms/words-and-wishes.tsx`)
 - [x] Animated floating hearts

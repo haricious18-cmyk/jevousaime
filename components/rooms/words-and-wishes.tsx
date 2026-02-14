@@ -1,309 +1,440 @@
 "use client"
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
-import { Heart, SkipForward, Sparkles } from "lucide-react"
-import { useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 
-export default function WordsAndWishes({ onComplete }: { onComplete?: () => void }) {
-  const [showFullNote, setShowFullNote] = useState(false)
-  
-  // Mouse movement logic for 3D Card Effect
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
+type TimerData = {
+  startedAt: number
+  revealed: boolean
+}
 
-  const mouseX = useSpring(x, { stiffness: 500, damping: 50 })
-  const mouseY = useSpring(y, { stiffness: 500, damping: 50 })
+type WordsAndWishesProps = {
+  sessionId: string
+  role: "partner_a" | "partner_b"
+  playerName: string
+  partnerName: string
+  onComplete?: () => void
+}
 
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["7deg", "-7deg"])
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-7deg", "7deg"])
+const TIMER_ROOM_NAME = "words_timer"
+const LETTER_ROOM_A = "words_letter_partner_a"
+const LETTER_ROOM_B = "words_letter_partner_b"
+const LEGACY_ROOM_NAME = "love_letter_room"
+const DURATION_MS = 2 * 60 * 1000
 
-  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
-    const rect = event.currentTarget.getBoundingClientRect()
-    const width = rect.width
-    const height = rect.height
-    const mouseX = event.clientX - rect.left
-    const mouseY = event.clientY - rect.top
-    const xPct = mouseX / width - 0.5
-    const yPct = mouseY / height - 0.5
-    x.set(xPct)
-    y.set(yPct)
-  }
+const emptyTimerData: TimerData = {
+  startedAt: Date.now(),
+  revealed: false,
+}
 
-  function handleMouseLeave() {
-    x.set(0)
-    y.set(0)
-  }
+export default function WordsAndWishes({
+  sessionId,
+  role,
+  playerName,
+  partnerName,
+  onComplete,
+}: WordsAndWishesProps) {
+  const supabase = useMemo(() => createClient(), [])
+  const [timerData, setTimerData] = useState<TimerData>(emptyTimerData)
+  const [letterA, setLetterA] = useState("")
+  const [letterB, setLetterB] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [now, setNow] = useState(Date.now())
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerDataRef = useRef<TimerData>(emptyTimerData)
+  const myLetterRef = useRef("")
+  const isEditingRef = useRef(false)
+
+  const isA = role === "partner_a"
+  const myLetter = isA ? letterA : letterB
+  const partnerLetter = isA ? letterB : letterA
+  const myRoomName = isA ? LETTER_ROOM_A : LETTER_ROOM_B
+  const remainingMs = Math.max(0, timerData.startedAt + DURATION_MS - now)
+  const isTimeUp = remainingMs === 0
+  const isRevealed = timerData.revealed || isTimeUp
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowFullNote(true), 2000)
-    return () => clearTimeout(timer)
+    timerDataRef.current = timerData
+  }, [timerData])
+
+  useEffect(() => {
+    myLetterRef.current = myLetter
+  }, [myLetter])
+
+  const persistTimer = useCallback(
+    async (patch: Partial<TimerData>) => {
+      const next: TimerData = {
+        startedAt: patch.startedAt ?? timerDataRef.current.startedAt ?? Date.now(),
+        revealed: patch.revealed ?? timerDataRef.current.revealed ?? false,
+      }
+
+      if (Date.now() >= next.startedAt + DURATION_MS) {
+        next.revealed = true
+      }
+
+      const { error: saveError } = await supabase.from("room_progress").upsert(
+        {
+          session_id: sessionId,
+          room_name: TIMER_ROOM_NAME,
+          completed: next.revealed,
+          data: next,
+        },
+        { onConflict: "session_id,room_name" }
+      )
+
+      if (saveError) {
+        setError(`Failed to save your letter: ${saveError.message}`)
+        return
+      }
+
+      setTimerData(next)
+    },
+    [supabase, sessionId]
+  )
+
+  const loadState = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    const { data: rows, error: loadError } = await supabase
+      .from("room_progress")
+      .select("room_name,data")
+      .eq("session_id", sessionId)
+      .in("room_name", [TIMER_ROOM_NAME, LETTER_ROOM_A, LETTER_ROOM_B, LEGACY_ROOM_NAME])
+
+    if (loadError) {
+      setError("Failed to load love letter room.")
+      setLoading(false)
+      return
+    }
+
+    const timerRow = rows?.find((row) => row.room_name === TIMER_ROOM_NAME)
+    const letterARow = rows?.find((row) => row.room_name === LETTER_ROOM_A)
+    const letterBRow = rows?.find((row) => row.room_name === LETTER_ROOM_B)
+    const legacyRow = rows?.find((row) => row.room_name === LEGACY_ROOM_NAME)
+
+    const timerPayload = (timerRow?.data || {}) as Partial<TimerData>
+    const nextTimerData: TimerData = {
+      startedAt: timerPayload.startedAt ?? Date.now(),
+      revealed: timerPayload.revealed ?? false,
+    }
+    const legacyData = (legacyRow?.data || {}) as { letterA?: string; letterB?: string }
+    const nextLetterA = ((letterARow?.data || {}) as { text?: string }).text ?? legacyData.letterA ?? ""
+    const nextLetterB = ((letterBRow?.data || {}) as { text?: string }).text ?? legacyData.letterB ?? ""
+
+    setTimerData(nextTimerData)
+    setLetterA(nextLetterA)
+    setLetterB(nextLetterB)
+
+    if (!timerRow) {
+      await persistTimer({ startedAt: nextTimerData.startedAt, revealed: false })
+    }
+
+    if (Date.now() >= nextTimerData.startedAt + DURATION_MS && !nextTimerData.revealed) {
+      await persistTimer({ revealed: true, startedAt: nextTimerData.startedAt })
+    }
+
+    setLoading(false)
+  }, [supabase, sessionId, persistTimer])
+
+  useEffect(() => {
+    void loadState()
+  }, [loadState])
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
   }, [])
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
-      },
+  const refreshLetters = useCallback(async () => {
+    const { data: rows, error: fetchError } = await supabase
+      .from("room_progress")
+      .select("room_name,data")
+      .eq("session_id", sessionId)
+      .in("room_name", [LETTER_ROOM_A, LETTER_ROOM_B, LEGACY_ROOM_NAME])
+
+    if (fetchError) return
+
+    const rowA = rows?.find((row) => row.room_name === LETTER_ROOM_A)
+    const rowB = rows?.find((row) => row.room_name === LETTER_ROOM_B)
+    const legacyRow = rows?.find((row) => row.room_name === LEGACY_ROOM_NAME)
+    const legacyData = (legacyRow?.data || {}) as { letterA?: string; letterB?: string }
+    const nextA = ((rowA?.data || {}) as { text?: string }).text ?? legacyData.letterA ?? ""
+    const nextB = ((rowB?.data || {}) as { text?: string }).text ?? legacyData.letterB ?? ""
+
+    // Don't overwrite the user's local typing for their own letter while editing
+    if (!(isA && isEditingRef.current)) {
+      setLetterA(nextA)
+    }
+    if (!(!isA && isEditingRef.current)) {
+      setLetterB(nextB)
+    }
+  }, [supabase, sessionId])
+
+  useEffect(() => {
+    if (!isTimeUp || timerData.revealed) return
+    void persistTimer({ revealed: true })
+  }, [isTimeUp, timerData.revealed, persistTimer])
+
+  useEffect(() => {
+    if (!isRevealed) return
+    void refreshLetters()
+  }, [isRevealed, refreshLetters])
+
+  useEffect(() => {
+    if (isRevealed) return
+    const interval = setInterval(() => {
+      void refreshLetters()
+    }, 1500)
+    return () => clearInterval(interval)
+  }, [isRevealed, refreshLetters])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`love-letter-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "room_progress",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const row = payload.new as { room_name?: string; data?: unknown }
+          if (row?.room_name === TIMER_ROOM_NAME) {
+            const next = (row.data || {}) as Partial<TimerData>
+            setTimerData({
+              startedAt: next.startedAt ?? Date.now(),
+              revealed: next.revealed ?? false,
+            })
+            return
+          }
+
+          if (row?.room_name === LETTER_ROOM_A) {
+            const next = (row.data || {}) as { text?: string }
+            // don't stomp local edits
+            if (!(isA && isEditingRef.current)) {
+              setLetterA(next.text ?? "")
+            }
+            return
+          }
+
+          if (row?.room_name === LETTER_ROOM_B) {
+            const next = (row.data || {}) as { text?: string }
+            if (!(!isA && isEditingRef.current)) {
+              setLetterB(next.text ?? "")
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, sessionId])
+
+  const persistMyLetter = useCallback(
+    async (value: string) => {
+      const { error: saveError } = await supabase.from("room_progress").upsert(
+        {
+          session_id: sessionId,
+          room_name: myRoomName,
+          completed: false,
+          data: { text: value },
+        },
+        { onConflict: "session_id,room_name" }
+      )
+
+      if (saveError) {
+        setError(`Failed to save your letter: ${saveError.message}`)
+      }
     },
+    [supabase, sessionId, myRoomName]
+  )
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+      void persistMyLetter(myLetterRef.current)
+    }
+  }, [persistMyLetter])
+
+  const handleMyLetterChange = useCallback(
+    (value: string) => {
+      setError(null)
+      if (isA) {
+        setLetterA(value)
+      } else {
+        setLetterB(value)
+      }
+
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        void persistMyLetter(value)
+      }, 180)
+    },
+    [isA, persistMyLetter]
+  )
+
+  useEffect(() => {
+    if (!isTimeUp) return
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+    void persistMyLetter(myLetterRef.current)
+  }, [isTimeUp, persistMyLetter])
+
+  const formatTime = (ms: number) => {
+    const totalSec = Math.floor(ms / 1000)
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, "0")
+    const ss = String(totalSec % 60).padStart(2, "0")
+    return `${mm}:${ss}`
   }
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30, filter: "blur(10px)" },
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 1,
-        ease: [0.22, 1, 0.36, 1], // Custom bezier for smooth snapping
-      },
-    },
+  const drawWrappedText = (
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number
+  ) => {
+    const words = text.split(" ")
+    let line = ""
+
+    for (let i = 0; i < words.length; i++) {
+      const test = `${line}${words[i]} `
+      if (ctx.measureText(test).width > maxWidth && i > 0) {
+        ctx.fillText(line, x, y)
+        line = `${words[i]} `
+        y += lineHeight
+      } else {
+        line = test
+      }
+    }
+
+    ctx.fillText(line, x, y)
   }
 
-  // More hearts for a denser background
-  const floatingHearts = Array.from({ length: 15 }).map((_, i) => ({
-    id: i,
-    delay: Math.random() * 5,
-    duration: 6 + Math.random() * 4,
-    xStart: Math.random() * 100,
-    scale: 0.5 + Math.random() * 0.8,
-  }))
+  const downloadPartnerLetter = () => {
+    const width = 1080
+    const height = 1350
+    const canvas = document.createElement("canvas")
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const grad = ctx.createLinearGradient(0, 0, width, height)
+    grad.addColorStop(0, "#fff7f1")
+    grad.addColorStop(1, "#ffe9f3")
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, width, height)
+
+    ctx.fillStyle = "#b91c1c"
+    ctx.font = "52px Georgia"
+    ctx.fillText("Love Letter", 70, 110)
+
+    ctx.fillStyle = "#7f1d1d"
+    ctx.font = "30px Georgia"
+    ctx.fillText(`From ${partnerName} to ${playerName}`, 70, 160)
+
+    ctx.fillStyle = "#111827"
+    ctx.font = "26px 'Helvetica Neue', sans-serif"
+    drawWrappedText(ctx, partnerLetter || "(No letter written)", 70, 240, 940, 42)
+
+    const url = canvas.toDataURL("image/png")
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `love-letter-from-${partnerName}.png`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
+  if (loading) {
+    return <div className="relative z-10 min-h-dvh grid place-items-center">Loading...</div>
+  }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-white via-cream to-blush/20 overflow-hidden relative perspective-1000">
-      
-      {/* Enhanced Floating Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {floatingHearts.map((heart) => (
-          <motion.div
-            key={heart.id}
-            className="absolute"
-            initial={{ 
-              opacity: 0, 
-              y: "110vh", 
-              x: `${heart.xStart}vw`,
-              scale: heart.scale 
-            }}
-            animate={{
-              opacity: [0, 0.4, 0],
-              y: "-10vh",
-              // Swaying motion
-              x: [`${heart.xStart}vw`, `${heart.xStart + 5}vw`, `${heart.xStart - 5}vw`, `${heart.xStart}vw`],
-            }}
-            transition={{
-              duration: heart.duration,
-              delay: heart.delay,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          >
-            <Heart className="w-6 h-6 fill-primary/20 text-primary/30" />
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-16 flex flex-col items-center justify-center min-h-screen">
-        
-        {/* Opening Header Section */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-center mb-12"
-        >
-          <motion.div variants={itemVariants} className="mb-6 relative">
-            <div className="relative inline-block">
-              {/* Outer Glow Ring */}
-              <motion.div 
-                animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 bg-primary/20 rounded-full blur-xl"
-              />
-              <motion.div
-                whileHover={{ scale: 1.2, rotate: 10 }}
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Heart className="w-16 h-16 text-primary mx-auto fill-primary drop-shadow-lg" />
-              </motion.div>
-            </div>
-          </motion.div>
-
-          <motion.h1
-            variants={itemVariants}
-            className="font-playfair text-5xl md:text-6xl text-primary mb-4 drop-shadow-sm"
-          >
-            My Words & Wishes
-          </motion.h1>
-
-          <motion.div variants={itemVariants} className="flex items-center justify-center gap-2 text-xl text-primary/70 font-inter italic">
-            <span className="h-[1px] w-8 bg-primary/40 inline-block"></span>
-            <p>A final thought for you</p>
-            <span className="h-[1px] w-8 bg-primary/40 inline-block"></span>
-          </motion.div>
-        </motion.div>
-
-        {/* 3D Interactive Note Card */}
-        {showFullNote && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, rotateX: 20 }}
-            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-            transition={{ type: "spring", duration: 1.5 }}
-            className="w-full max-w-2xl perspective-1000 mb-12"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ perspective: 1000 }}
-          >
-            <motion.div
-              style={{ 
-                rotateX, 
-                rotateY,
-                transformStyle: "preserve-3d" 
-              }}
-              className="relative bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
-            >
-              {/* Glossy reflection gradient */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-transparent pointer-events-none" />
-
-              <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-8 relative z-10"
-              >
-                {/* Main paragraph with highlighted text */}
-                <motion.div variants={itemVariants} className="relative">
-                   <Sparkles className="absolute -left-8 -top-4 text-primary/40 w-6 h-6 animate-pulse" />
-                   <p className="text-lg md:text-xl text-primary/90 leading-loose font-inter">
-                    If you're looking for the word that means caring about someone beyond all rationality and wanting them to have everything they want no matter how much it destroys you,{" "}
-                    <motion.span 
-                      initial={{ backgroundSize: "0% 100%" }}
-                      animate={{ backgroundSize: "100% 100%" }}
-                      transition={{ delay: 1, duration: 1 }}
-                      className="text-primary font-bold bg-gradient-to-r from-primary/10 to-primary/10 bg-no-repeat bg-bottom px-1 rounded"
-                    >
-                      it's love.
-                    </motion.span>
-                  </p>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="space-y-6">
-                  <p className="text-base text-primary/70 leading-relaxed font-inter">
-                    Love is undefinable. It's relative. For few it's at first sight, for few it's not just a moment.
-                  </p>
-
-                  <p className="text-base text-primary/70 leading-relaxed font-inter border-l-2 border-primary/20 pl-4">
-                    And when you love someone you just, you don't stop, ever. Even when people roll their eyes and call you crazy. Even then. Especially then.
-                  </p>
-
-                  <p className="text-base text-primary/70 leading-relaxed font-inter">
-                    You just don't give up. Because if I could just give up, if I could just, you know, take the whole world's advice and move on and find someone else, that wouldn't be love. That would be some other disposable thing that is not worth fighting for.
-                  </p>
-
-                  <p className="text-base text-primary/80 font-medium leading-relaxed font-inter italic">
-                    But I – that is not what this is.
-                  </p>
-                </motion.div>
-
-                {/* Tamil blessing with fade-in divider */}
-                <motion.div variants={itemVariants} className="pt-6 border-t border-primary/10">
-                  <p className="text-2xl md:text-3xl font-playfair text-primary italic mb-2 text-center">
-                    Neengaa Ekkathin Kaadhalai Hirdayam Ariyumo!
-                  </p>
-                  <p className="text-sm text-primary/60 font-inter text-center uppercase tracking-widest">
-                    (May your heart know the love you share)
-                  </p>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Footer Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 3.5, type: "spring" }}
-          className="text-center relative z-20"
-        >
-          <motion.div
-            className="font-playfair text-4xl md:text-6xl font-bold mb-8 relative"
-            animate={{ 
-              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-            }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-            style={{
-              backgroundImage: "linear-gradient(to right, #E63946, #FF9A9E, #E63946)",
-              backgroundSize: "200% auto",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            HAPPY VALENTINE'S DAY
-          </motion.div>
-
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 4 }}
-            className="text-primary/70 font-inter mb-10 text-lg"
-          >
-            -- hari
-          </motion.p>
-
-          <div className="flex gap-4 justify-center items-center">
-            {/* Primary Button with Shimmer */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-pink-600 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onComplete}
-                className="relative px-8 py-4 bg-primary text-white font-playfair text-lg rounded-full shadow-xl overflow-hidden"
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
-                />
-                <span className="relative flex items-center gap-2">
-                  ✨ Until Next Time ✨
-                </span>
-              </motion.button>
-            </div>
-
-            {/* Skip Button */}
-            <motion.button
-              whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.4)" }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onComplete}
-              className="px-6 py-4 bg-white/20 backdrop-blur-sm text-primary/80 font-playfair text-lg rounded-full shadow-lg border border-white/50 transition-all flex items-center gap-2"
-            >
-              <SkipForward className="h-5 w-5" />
-              Skip
-            </motion.button>
+    <div className="relative z-10 min-h-dvh px-4 py-16">
+      <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-card/80 p-6 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-serif text-3xl text-foreground">Words & Wishes</h2>
+          <div className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm">
+            Time left: <span className="font-semibold">{formatTime(remainingMs)}</span>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Corner Decorations */}
-        <motion.div
-          animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-10 right-10 opacity-5"
-        >
-          <Heart className="w-32 h-32 text-primary" />
-        </motion.div>
+        <p className="text-sm text-muted-foreground">
+          You both have 2 minutes to write what you feel right now. When the timer ends, your partner's letter is revealed.
+        </p>
 
-        <motion.div
-          animate={{ rotate: -360, scale: [1, 1.2, 1] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-10 left-10 opacity-5"
-        >
-          <Heart className="w-40 h-40 text-primary" />
-        </motion.div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-border bg-secondary/20 p-4">
+            <p className="mb-2 text-sm font-medium text-foreground">Your letter</p>
+            <textarea
+              value={myLetter}
+              onChange={(e) => handleMyLetterChange(e.target.value)}
+              onFocus={() => {
+                isEditingRef.current = true
+              }}
+              onBlur={() => {
+                isEditingRef.current = false
+                if (saveTimerRef.current) {
+                  clearTimeout(saveTimerRef.current)
+                  saveTimerRef.current = null
+                }
+                void persistMyLetter(myLetterRef.current)
+              }}
+              onCompositionStart={() => (isEditingRef.current = true)}
+              onCompositionEnd={() => (isEditingRef.current = false)}
+              disabled={isTimeUp}
+              aria-label="Your letter"
+              className="h-56 w-full rounded-lg border border-border bg-background px-3 py-2 disabled:opacity-60"
+              placeholder="Write your heart out..."
+            />
+            {isTimeUp && <p className="mt-2 text-xs text-muted-foreground">Writing time ended.</p>}
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/20 p-4">
+            <p className="mb-2 text-sm font-medium text-foreground">{partnerName}'s letter</p>
+            {!isRevealed ? (
+              <div className="grid h-56 place-items-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+                Reveals when timer ends.
+              </div>
+            ) : (
+              <div className="h-56 overflow-auto rounded-lg border border-border bg-background px-3 py-2 whitespace-pre-wrap text-sm">
+                {partnerLetter || "(No letter written)"}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={downloadPartnerLetter}
+            disabled={!isRevealed}
+            className="rounded-lg bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+          >
+            Download Partner Letter
+          </button>
+          <button
+            onClick={() => onComplete?.()}
+            disabled={!isRevealed}
+            className="rounded-lg border border-border px-4 py-2 text-foreground disabled:opacity-50"
+          >
+            Continue
+          </button>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
       </div>
     </div>
   )

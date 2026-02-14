@@ -1,11 +1,12 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { BookOpen, Stars, Check, Sparkles } from "lucide-react"
+import { BookOpen, Stars, Check, Sparkles, PenLine } from "lucide-react"
 import type { GamePhase } from "@/hooks/use-session"
 
 type RoomSelectorProps = {
   completedRooms: string[]
+  unlockedRoomId: GamePhase | null
   onSelectRoom: (phase: GamePhase) => void
 }
 
@@ -37,11 +38,18 @@ const rooms = [
     bg: "bg-amber-400/10",
     borderColor: "border-amber-400/30",
   },
+  {
+    id: "words" as GamePhase,
+    name: "Words & Wishes",
+    description: "Write from your heart and reveal your partner's letter when time is up.",
+    icon: PenLine,
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+    borderColor: "border-rose-500/30",
+  },
 ]
 
-export function RoomSelector({ completedRooms, onSelectRoom }: RoomSelectorProps) {
-  const allCompleted = completedRooms.length >= rooms.length
-
+export function RoomSelector({ completedRooms, unlockedRoomId, onSelectRoom }: RoomSelectorProps) {
   return (
     <div className="relative z-10 flex flex-col items-center justify-center min-h-dvh px-4 pt-16">
       <motion.div
@@ -51,14 +59,13 @@ export function RoomSelector({ completedRooms, onSelectRoom }: RoomSelectorProps
       >
         <div className="text-center mb-8">
           <h2 className="font-serif text-3xl text-foreground text-glow mb-2">The Hallway</h2>
-          <p className="text-muted-foreground">
-            Three doors await. Choose a room to explore together.
-          </p>
+          <p className="text-muted-foreground">Choose a room to explore together.</p>
         </div>
 
         <div className="flex flex-col gap-4">
           {rooms.map((room, i) => {
             const isCompleted = completedRooms.includes(room.id)
+            const isLocked = !isCompleted && unlockedRoomId !== room.id
             const Icon = room.icon
 
             return (
@@ -68,7 +75,7 @@ export function RoomSelector({ completedRooms, onSelectRoom }: RoomSelectorProps
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.15 }}
                 onClick={() => onSelectRoom(room.id)}
-                disabled={isCompleted}
+                disabled={isCompleted || isLocked}
                 className={`flex items-start gap-4 p-5 rounded-xl border ${room.borderColor} ${room.bg} text-left transition-all hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100`}
               >
                 <div className={`p-3 rounded-lg ${room.bg} ${room.color} shrink-0`}>
@@ -78,9 +85,10 @@ export function RoomSelector({ completedRooms, onSelectRoom }: RoomSelectorProps
                   <h3 className={`font-serif text-xl ${room.color} mb-1`}>
                     {room.name}
                     {isCompleted && (
-                      <span className="text-sm text-muted-foreground ml-2 font-sans">
-                        Completed
-                      </span>
+                      <span className="text-sm text-muted-foreground ml-2 font-sans">Completed</span>
+                    )}
+                    {isLocked && (
+                      <span className="text-sm text-muted-foreground ml-2 font-sans">Locked</span>
                     )}
                   </h3>
                   <p className="text-muted-foreground text-sm">{room.description}</p>
@@ -89,52 +97,6 @@ export function RoomSelector({ completedRooms, onSelectRoom }: RoomSelectorProps
             )
           })}
         </div>
-
-        {allCompleted && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 text-center"
-          >
-            <button
-              onClick={() => onSelectRoom("bedroom")}
-              className="w-full px-8 py-4 rounded-lg bg-gradient-to-b from-red-500 to-red-600 text-white font-bold text-lg shadow-lg shadow-red-500/50 hover:shadow-red-500/75 hover:from-red-400 hover:to-red-500 transition-all animate-pulse-glow"
-            >
-              Enter the bedroom 💕
-            </button>
-          </motion.div>
-        )}
-
-        {!allCompleted && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 text-center"
-          >
-            <button
-              onClick={() => onSelectRoom("bedroom")}
-              className="w-full px-8 py-3 rounded-lg bg-gradient-to-b from-red-500 to-red-600 text-white font-bold shadow-lg shadow-red-500/50 hover:shadow-red-500/75 hover:from-red-400 hover:to-red-500 transition-all"
-            >
-              Skip to Bedroom
-            </button>
-          </motion.div>
-        )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
-          className="mt-3 text-center"
-        >
-          <button
-            onClick={() => onSelectRoom("bedroom")}
-            className="w-full px-8 py-3 rounded-lg border border-red-400/50 bg-red-500/15 text-red-100 font-semibold hover:bg-red-500/25 transition-all"
-          >
-            Move to Bedroom
-          </button>
-        </motion.div>
       </motion.div>
     </div>
   )

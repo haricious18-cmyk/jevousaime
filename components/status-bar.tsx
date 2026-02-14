@@ -18,13 +18,13 @@ export function StatusBar({ player1Name, player2Name, loveMeter, currentRoom }: 
         ? "Constellation Canvas"
         : currentRoom === "kintsugi"
           ? "The Golden Repair"
-        : currentRoom === "bedroom"
-          ? "Valentine's Week"
           : currentRoom === "words"
             ? "Words & Wishes"
-        : currentRoom === "hallway"
-            ? "The Hallway"
-            : ""
+            : currentRoom === "the_end"
+              ? "The End"
+            : currentRoom === "hallway"
+              ? "The Hallway"
+              : ""
 
   return (
     <motion.header

@@ -240,7 +240,7 @@ export function LibraryOfEchoes({ sessionId, playerName, partnerName, onComplete
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" role="log" aria-live="polite">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
             <motion.div
@@ -291,7 +291,10 @@ export function LibraryOfEchoes({ sessionId, playerName, partnerName, onComplete
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              onClick={onComplete}
+              onClick={() => {
+                if (!confirm("Complete this room and move on?")) return
+                onComplete()
+              }}
               className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-medium box-glow hover:opacity-90 transition-opacity"
             >
               Complete this room
@@ -299,7 +302,10 @@ export function LibraryOfEchoes({ sessionId, playerName, partnerName, onComplete
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              onClick={onComplete}
+              onClick={() => {
+                if (!confirm("Skip this room? Are you sure?")) return
+                onComplete()
+              }}
               className="flex-1 py-3 rounded-lg bg-white/20 text-white font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
               title="Skip this room"
             >

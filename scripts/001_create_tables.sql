@@ -1,39 +1,5 @@
--- Rooms table: stores room session data (primary table)
-create table if not exists public.rooms (
-  id uuid primary key default gen_random_uuid(),
-  room_code text unique not null,
-  current_day integer not null default 1,
-  current_stage integer not null default 1,
-  love_meter integer not null default 0,
-  is_complete boolean not null default false,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
--- Room metadata: stores state (matched pairs, compass selections, etc.)
-create table if not exists public.room_metadata (
-  id uuid primary key default gen_random_uuid(),
-  room_id uuid not null references public.rooms(id) on delete cascade,
-  door_state jsonb default '{"partner_a_input":"","partner_b_input":"","both_ready":false}',
-  library_matches jsonb default '{}',
-  compass_selections jsonb default '{"partner_a":null,"partner_b":null,"both_locked":false}',
-  heartbeat_state jsonb default '{"partner_a_pressing":false,"partner_b_pressing":false,"fill_percentage":0}',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique(room_id)
-);
-
--- Users in room (presence tracking)
-create table if not exists public.room_users (
-  id uuid primary key default gen_random_uuid(),
-  room_id uuid not null references public.rooms(id) on delete cascade,
-  user_id text unique not null,
-  role text not null check (role in ('partner_a', 'partner_b')),
-  name text,
-  is_online boolean not null default true,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+-- Note: removed legacy `rooms`, `room_metadata`, and `room_users` tables.
+-- This project now uses `sessions` + per-room `room_progress`, `messages`, and `stars` tables.
 
 -- Legacy sessions table (for backward compatibility)
 create table if not exists public.sessions (
@@ -81,12 +47,4 @@ create table if not exists public.stars (
 );
 
 -- Time capsules: stores future messages
-create table if not exists public.capsules (
-  id uuid primary key default gen_random_uuid(),
-  session_id uuid not null references public.sessions(id) on delete cascade,
-  author text not null,
-  message text not null,
-  unlock_date date not null,
-  sealed boolean not null default false,
-  created_at timestamptz not null default now()
-);
+-- Note: `capsules` (time capsules) removed as unused by current rooms.

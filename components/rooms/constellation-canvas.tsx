@@ -221,14 +221,20 @@ export function ConstellationCanvas({ sessionId, playerName, partnerName, onComp
           {hasDownloaded && (
             <div className="flex gap-2">
               <button
-                onClick={onComplete}
+                onClick={() => {
+                  if (!confirm("Mark this room complete and move on?")) return
+                  onComplete()
+                }}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
                 title="Go to next room"
               >
                 Done
               </button>
               <button
-                onClick={onComplete}
+                onClick={() => {
+                  if (!confirm("Skip this room? Are you sure?")) return
+                  onComplete()
+                }}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors"
                 title="Skip this room"
               >
