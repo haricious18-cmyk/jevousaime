@@ -2,8 +2,7 @@
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 import { Heart, Sparkles } from "lucide-react"
-import { useEffect, useState, useRef, useMemo } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
 
 type TheEndProps = {
   onComplete?: () => void
@@ -14,10 +13,6 @@ type TheEndProps = {
 
 export default function WordsAndWishes({ onComplete, sessionId, player1Name = "", player2Name = "" }: TheEndProps) {
   const [showFullNote, setShowFullNote] = useState(false)
-  const [letterA, setLetterA] = useState("")
-  const [letterB, setLetterB] = useState("")
-  const [loading, setLoading] = useState(!!sessionId)
-  const supabase = useMemo(() => createClient(), [])
   
   // Mouse movement logic for 3D Card Effect
   const x = useMotionValue(0)
@@ -50,37 +45,6 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
     const timer = setTimeout(() => setShowFullNote(true), 2000)
     return () => clearTimeout(timer)
   }, [])
-
-  // Load letters from database
-  useEffect(() => {
-    if (!sessionId) {
-      setLoading(false)
-      return
-    }
-
-    const loadLetters = async () => {
-      try {
-        const { data: rows } = await supabase
-          .from("room_progress")
-          .select("room_name,data")
-          .eq("session_id", sessionId)
-          .in("room_name", ["words_letter_partner_a", "words_letter_partner_b"])
-
-        if (rows) {
-          const aRow = rows.find((r) => r.room_name === "words_letter_partner_a")
-          const bRow = rows.find((r) => r.room_name === "words_letter_partner_b")
-          setLetterA((aRow?.data as { text?: string })?.text ?? "")
-          setLetterB((bRow?.data as { text?: string })?.text ?? "")
-        }
-      } catch (err) {
-        console.error("Failed to load letters:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadLetters()
-  }, [sessionId, supabase])
 
 
 
@@ -267,36 +231,6 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
           </motion.div>
         )}
 
-        {/* Letters Display Card */}
-        {(letterA || letterB) && showFullNote && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2 }}
-            className="w-full max-w-2xl bg-white border-2 border-primary/20 rounded-2xl p-8 md:p-12 shadow-lg mb-12"
-          >
-            <h2 className="font-playfair text-3xl text-primary mb-8 text-center">Words & Wishes</h2>
-            
-            <div className="space-y-8">
-              {letterA && (
-                <div className="pb-8 border-b border-primary/10">
-                  <h3 className="font-playfair text-xl text-primary/80 mb-4">{player1Name}'s Letter</h3>
-                  <p className="text-primary/70 leading-relaxed whitespace-pre-wrap">{letterA}</p>
-                </div>
-              )}
-              
-              {letterB && (
-                <div>
-                  <h3 className="font-playfair text-xl text-primary/80 mb-4">{player2Name}'s Letter</h3>
-                  <p className="text-primary/70 leading-relaxed whitespace-pre-wrap">{letterB}</p>
-                </div>
-              )}
-            </div>
-
-
-          </motion.div>
-        )}
-
         {/* Footer Section */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -340,7 +274,6 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
                   // debug: ensure click is firing and onComplete is invoked
                   // eslint-disable-next-line no-console
                   console.log("Until Next Time clicked", { onComplete })
-                  window.print()
                   onComplete?.()
                 }}
                 className="relative px-8 py-4 bg-primary text-white font-playfair text-lg rounded-full shadow-xl overflow-hidden"
