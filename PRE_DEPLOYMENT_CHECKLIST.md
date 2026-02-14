@@ -288,7 +288,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 {
   id: uuid,
   room_code: "ABC123",
-  current_stage: 0-7,
+  current_stage: 1-7,
   love_meter: 0-100,
   is_complete: false,
   created_at: timestamp
