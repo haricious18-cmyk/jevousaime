@@ -425,9 +425,9 @@ export default function KintsugiExperience({
                 {onComplete && (
                   <button
                     onClick={onComplete}
-                    className="mt-3 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-amber-950"
+                    className="mt-3 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-amber-950 hover:bg-amber-400 transition-colors"
                   >
-                    Continue
+                    Done
                   </button>
                 )}
               </motion.div>
