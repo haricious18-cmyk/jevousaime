@@ -13,7 +13,7 @@ import { LibraryOfEchoes } from "@/components/rooms/library-of-echoes"
 import { ConstellationCanvas } from "@/components/rooms/constellation-canvas"
 import KintsugiExperience from "@/components/rooms/KintsugiExperience"
 import ValentinesWeek from "@/components/rooms/valentines-week"
-import WordsWishes from "@/components/rooms/words-wishes"
+import WordsAndWishes from "@/components/rooms/words-and-wishes"
 import { useSession, type GamePhase } from "@/hooks/use-session"
 import { createClient } from "@/lib/supabase/client"
 
@@ -229,7 +229,7 @@ export default function Home() {
 
         {/* Phase: Words & Wishes */}
         {phase === "words" && session && (
-          <WordsWishes
+          <WordsAndWishes
             key="words"
             playerName={playerName}
             partnerName={partnerName}
