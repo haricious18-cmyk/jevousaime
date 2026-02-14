@@ -23,8 +23,10 @@ const Celebration = dynamic(() => import("@/components/rooms/celebration").then(
 import { useSession, type GamePhase } from "@/hooks/use-session"
 import { createClient } from "@/lib/supabase/client"
 
-// Removed rooms from home/login screen per request
-const ROOM_SEQUENCE = [] as const
+const ROOM_SEQUENCE = ["library", "constellation", "kintsugi", "words"] as const
+
+// Rooms to hide on the home/login screen (doesn't affect progression)
+const HIDDEN_ON_HOME = new Set<string>(["library", "constellation", "kintsugi", "words"])
 const ROOM_SET = new Set<string>(ROOM_SEQUENCE)
 const VALID_PHASES = new Set<string>([
   "lobby",
@@ -239,7 +241,7 @@ export default function Home() {
       )}
 
       <AnimatePresence mode="wait">
-        <ProgressSteps steps={ROOM_SEQUENCE as unknown as string[]} current={phase} />
+        <ProgressSteps steps={ROOM_SEQUENCE.filter(r => !HIDDEN_ON_HOME.has(r)) as unknown as string[]} current={phase} />
         {/* Phase: Lobby / Waiting */}
         {(!session || phase === "waiting") && (
           <Lobby
@@ -269,6 +271,7 @@ export default function Home() {
             completedRooms={completedRooms}
             unlockedRoomId={nextUnlockedRoom}
             onSelectRoom={handleSelectRoom}
+            hiddenRooms={[...HIDDEN_ON_HOME]}
           />
         )}
 

@@ -8,6 +8,7 @@ type RoomSelectorProps = {
   completedRooms: string[]
   unlockedRoomId: GamePhase | null
   onSelectRoom: (phase: GamePhase) => void
+  hiddenRooms?: string[]
 }
 
 const rooms = [
@@ -63,7 +64,10 @@ export function RoomSelector({ completedRooms, unlockedRoomId, onSelectRoom }: R
         </div>
 
         <div className="flex flex-col gap-4">
-          {rooms.map((room, i) => {
+          {(() => {
+            const hiddenSet = new Set(hiddenRooms ?? [])
+            const visibleRooms = rooms.filter((r) => !hiddenSet.has(r.id))
+            return visibleRooms.map((room, i) => {
             const isCompleted = completedRooms.includes(room.id)
             const isLocked = !isCompleted && unlockedRoomId !== room.id
             const Icon = room.icon
@@ -95,7 +99,8 @@ export function RoomSelector({ completedRooms, unlockedRoomId, onSelectRoom }: R
                 </div>
               </motion.button>
             )
-          })}
+          })
+          })()}
         </div>
       </motion.div>
     </div>
