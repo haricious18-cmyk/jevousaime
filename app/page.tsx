@@ -23,7 +23,8 @@ const Celebration = dynamic(() => import("@/components/rooms/celebration").then(
 import { useSession, type GamePhase } from "@/hooks/use-session"
 import { createClient } from "@/lib/supabase/client"
 
-const ROOM_SEQUENCE = ["library", "constellation", "kintsugi", "words"] as const
+// Removed rooms from home/login screen per request
+const ROOM_SEQUENCE = [] as const
 const ROOM_SET = new Set<string>(ROOM_SEQUENCE)
 const VALID_PHASES = new Set<string>([
   "lobby",
