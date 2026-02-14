@@ -422,14 +422,21 @@ export default function KintsugiExperience({
                 className="mt-4 rounded-lg border border-amber-300/70 bg-white/70 p-3 text-center"
               >
                 <p className="font-serif text-lg text-amber-900">Beautifully Broken, Perfectly Whole.</p>
-                {onComplete && (
-                  <button
-                    onClick={onComplete}
-                    className="mt-3 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-amber-950 hover:bg-amber-400 transition-colors"
-                  >
-                    Done
-                  </button>
-                )}
+              </motion.div>
+            )}
+
+            {onComplete && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4"
+              >
+                <button
+                  onClick={onComplete}
+                  className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-amber-950 hover:bg-amber-400 transition-colors"
+                >
+                  Done
+                </button>
               </motion.div>
             )}
           </aside>
