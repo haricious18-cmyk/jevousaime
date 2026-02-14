@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Heart } from "lucide-react"
+import { Heart, SkipForward } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function WordsAndWishes({ onComplete }: { onComplete?: () => void }) {
@@ -215,17 +215,32 @@ export default function WordsAndWishes({ onComplete }: { onComplete?: () => void
           <p className="text-primary/70 font-inter mb-8">-- Hari</p>
 
           {/* Completion button */}
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 4 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onComplete}
-            className="px-8 py-3 bg-gradient-to-r from-primary to-primary/80 text-white font-playfair text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
-          >
-            ✨ Until Next Time ✨
-          </motion.button>
+          <div className="flex gap-3 justify-center">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 4 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onComplete}
+              className="px-8 py-3 bg-gradient-to-r from-primary to-primary/80 text-white font-playfair text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              ✨ Until Next Time ✨
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 4 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onComplete}
+              className="px-6 py-3 bg-white/20 text-white font-playfair text-lg rounded-full shadow-lg hover:shadow-xl hover:bg-white/30 transition-all flex items-center gap-2"
+              title="Skip this room"
+            >
+              <SkipForward className="h-5 w-5" />
+              Skip
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Decorative elements */}

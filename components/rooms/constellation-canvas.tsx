@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Stars, ArrowLeft, Tag, Download } from "lucide-react"
+import { Stars, ArrowLeft, Tag, Download, SkipForward } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 
@@ -219,13 +219,23 @@ export function ConstellationCanvas({ sessionId, playerName, partnerName, onComp
             </button>
           )}
           {hasDownloaded && (
-            <button
-              onClick={onComplete}
-              className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
-              title="Go to next room"
-            >
-              Done
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={onComplete}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+                title="Go to next room"
+              >
+                Done
+              </button>
+              <button
+                onClick={onComplete}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors"
+                title="Skip this room"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
+                Skip
+              </button>
+            </div>
           )}
           <div className="text-xs text-slate-300">
             You: {myStars} stars | {partnerName}: {partnerStars} stars
@@ -377,13 +387,23 @@ export function ConstellationCanvas({ sessionId, playerName, partnerName, onComp
                 maxLength={40}
                 autoFocus
               />
-              <button
-                onClick={onComplete}
-                disabled={!constellationName.trim()}
-                className="w-full py-3 rounded-lg bg-accent text-accent-foreground font-medium box-glow-amber disabled:opacity-50"
-              >
-                Seal this sky
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={onComplete}
+                  disabled={!constellationName.trim()}
+                  className="flex-1 py-3 rounded-lg bg-accent text-accent-foreground font-medium box-glow-amber disabled:opacity-50 hover:opacity-90 transition-opacity"
+                >
+                  Seal this sky
+                </button>
+                <button
+                  onClick={onComplete}
+                  className="flex-1 py-3 rounded-lg bg-white/20 text-white font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+                  title="Skip this room"
+                >
+                  <SkipForward className="w-4 h-4" />
+                  Skip
+                </button>
+              </div>
             </div>
           )}
         </div>

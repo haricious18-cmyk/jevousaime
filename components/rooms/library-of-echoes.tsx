@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Send, BookOpen, ArrowLeft, ChevronRight } from "lucide-react"
+import { Send, BookOpen, ArrowLeft, ChevronRight, SkipForward } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 
@@ -287,14 +287,26 @@ export function LibraryOfEchoes({ sessionId, playerName, partnerName, onComplete
       <div className="border-t border-border bg-background/80 backdrop-blur-sm px-4 py-3">
         {error && <p className="text-destructive text-sm mb-2">{error}</p>}
         {isComplete ? (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={onComplete}
-            className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-medium box-glow"
-          >
-            Complete this room
-          </motion.button>
+          <div className="flex gap-2">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={onComplete}
+              className="flex-1 py-3 rounded-lg bg-primary text-primary-foreground font-medium box-glow hover:opacity-90 transition-opacity"
+            >
+              Complete this room
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={onComplete}
+              className="flex-1 py-3 rounded-lg bg-white/20 text-white font-medium hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+              title="Skip this room"
+            >
+              <SkipForward className="h-4 w-4" />
+              Skip
+            </motion.button>
+          </div>
         ) : promptCount === 0 ? (
           <motion.button
             initial={{ opacity: 0 }}

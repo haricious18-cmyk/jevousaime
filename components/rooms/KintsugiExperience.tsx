@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, CheckCircle2, ArrowLeft } from "lucide-react"
+import { Sparkles, CheckCircle2, ArrowLeft, SkipForward } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 
@@ -429,13 +429,21 @@ export default function KintsugiExperience({
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4"
+                className="mt-4 flex gap-2"
               >
                 <button
                   onClick={onComplete}
-                  className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-amber-950 hover:bg-amber-400 transition-colors"
+                  className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-amber-950 hover:bg-amber-400 transition-colors"
                 >
                   Done
+                </button>
+                <button
+                  onClick={onComplete}
+                  className="flex-1 rounded-lg bg-white/20 px-3 py-2 text-sm font-medium text-white hover:bg-white/30 transition-colors flex items-center justify-center gap-1"
+                  title="Skip this room"
+                >
+                  <SkipForward className="h-4 w-4" />
+                  Skip
                 </button>
               </motion.div>
             )}

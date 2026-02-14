@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Flower2, ArrowLeft, Send, Eye, EyeOff } from "lucide-react"
+import { Flower2, ArrowLeft, Send, Eye, EyeOff, SkipForward } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 
@@ -384,14 +384,26 @@ export function TimeCapsuleGarden({ sessionId, playerName, partnerName, onComple
       {/* Bottom actions */}
       <div className="border-t border-border bg-background/80 backdrop-blur-sm px-4 py-3">
         {allUnlocked && capsules.length >= 2 ? (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={onComplete}
-            className="w-full py-3 rounded-lg bg-green-400/20 text-green-400 font-medium border border-green-400/30"
-          >
-            Done
-          </motion.button>
+          <div className="flex gap-2">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={onComplete}
+              className="flex-1 py-3 rounded-lg bg-green-400/20 text-green-400 font-medium border border-green-400/30 hover:bg-green-400/30 transition-colors"
+            >
+              Done
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={onComplete}
+              className="flex-1 py-3 rounded-lg bg-white/20 text-white font-medium border border-white/20 hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+              title="Skip this room"
+            >
+              <SkipForward className="w-4 h-4" />
+              Skip
+            </motion.button>
+          </div>
         ) : !writing ? (
           <button
             onClick={() => setWriting(true)}
