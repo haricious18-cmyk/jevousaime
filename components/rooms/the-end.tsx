@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
-import { Heart, Sparkles, Download, Printer } from "lucide-react"
+import { Heart, Sparkles } from "lucide-react"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -18,7 +18,6 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
   const [letterB, setLetterB] = useState("")
   const [loading, setLoading] = useState(!!sessionId)
   const supabase = useMemo(() => createClient(), [])
-  const cardRef = useRef<HTMLDivElement>(null)
   
   // Mouse movement logic for 3D Card Effect
   const x = useMotionValue(0)
@@ -83,60 +82,7 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
     loadLetters()
   }, [sessionId, supabase])
 
-  const downloadAsImage = async () => {
-    if (!cardRef.current) return
-    try {
-      const html2canvas = (await import("html2canvas")).default
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        logging: false,
-      })
-      const link = document.createElement("a")
-      link.href = canvas.toDataURL("image/png")
-      link.download = `${player1Name}_and_${player2Name}_love_card.png`
-      link.click()
-    } catch (err) {
-      console.error("Failed to download image:", err)
-    }
-  }
 
-  const printCard = () => {
-    if (!cardRef.current) return
-    const printWindow = window.open("", "", "width=800,height=1000")
-    if (!printWindow) return
-    
-    const printContent = cardRef.current.innerHTML
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Love Card - ${player1Name} & ${player2Name}</title>
-          <style>
-            body { font-family: 'Georgia', serif; margin: 20px; color: #333; }
-            .card { max-width: 700px; padding: 40px; border: 2px solid #e63946; border-radius: 10px; }
-            h2 { font-size: 24px; color: #e63946; margin-bottom: 20px; }
-            .letter { margin-bottom: 30px; padding: 20px; background: #f5f5f5; border-radius: 5px; }
-            .letter p { line-height: 1.8; white-space: pre-wrap; }
-            @media print { body { margin: 0; } }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <h2>Words & Wishes</h2>
-            <h3>${player1Name}'s Letter</h3>
-            <div class="letter"><p>${letterA || "No letter written"}</p></div>
-            <h3>${player2Name}'s Letter</h3>
-            <div class="letter"><p>${letterB || "No letter written"}</p></div>
-          </div>
-        </body>
-      </html>
-    `)
-    printWindow.document.close()
-    setTimeout(() => {
-      printWindow.print()
-    }, 250)
-  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -327,7 +273,6 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2 }}
-            ref={cardRef}
             className="w-full max-w-2xl bg-white border-2 border-primary/20 rounded-2xl p-8 md:p-12 shadow-lg mb-12"
           >
             <h2 className="font-playfair text-3xl text-primary mb-8 text-center">Words & Wishes</h2>
@@ -348,27 +293,7 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
               )}
             </div>
 
-            {/* Download and Print Buttons */}
-            <div className="flex gap-4 mt-8 justify-center flex-wrap">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={downloadAsImage}
-                className="flex items-center gap-2 px-6 py-2 bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition"
-              >
-                <Download className="w-4 h-4" />
-                Download as Image
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={printCard}
-                className="flex items-center gap-2 px-6 py-2 bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition"
-              >
-                <Printer className="w-4 h-4" />
-                Print Card
-              </motion.button>
-            </div>
+
           </motion.div>
         )}
 
@@ -415,6 +340,7 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
                   // debug: ensure click is firing and onComplete is invoked
                   // eslint-disable-next-line no-console
                   console.log("Until Next Time clicked", { onComplete })
+                  window.print()
                   onComplete?.()
                 }}
                 className="relative px-8 py-4 bg-primary text-white font-playfair text-lg rounded-full shadow-xl overflow-hidden"
