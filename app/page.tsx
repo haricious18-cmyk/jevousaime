@@ -332,9 +332,9 @@ export default function Home() {
         {(phase === "the_end" || phase === "celebration") && session && (
           <TheEnd
             key="the_end"
+            sessionId={session.id}
             player1Name={player1}
             player2Name={player2}
-            loveMeter={session.love_meter}
             onComplete={() => updatePhase("celebration")}
           />
         )}
