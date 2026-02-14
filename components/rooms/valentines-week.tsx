@@ -141,6 +141,7 @@ export default function ValentinesWeek({
   const advancingRef = useRef(false)
   const teddyPathRef = useRef<SVGPathElement | null>(null)
   const [partnerOnline, setPartnerOnline] = useState(false)
+  const isMountedRef = useRef(true)
 
   const myNotes = role === "partner_a" ? roseData.notesA : roseData.notesB
   const partnerNotes = role === "partner_a" ? roseData.notesB : roseData.notesA
@@ -149,6 +150,8 @@ export default function ValentinesWeek({
   const readyToAdvance = roseData.notesA.length >= 5 && roseData.notesB.length >= 5
 
   const loadDayState = useCallback(async () => {
+    if (!isMountedRef.current) return
+    
     setLoading(true)
     setError(null)
 
@@ -254,7 +257,9 @@ export default function ValentinesWeek({
       }
     })
 
-    setLoading(false)
+    if (isMountedRef.current) {
+      setLoading(false)
+    }
   }, [supabase, roomCode, sessionId, onDayChanged])
 
   useEffect(() => {
@@ -386,9 +391,17 @@ export default function ValentinesWeek({
     }
   }, [supabase, sessionId, role, playerName])
 
-  const saveRoseData = useCallback(
-    async (data: RoseData) => {
-      await supabase.from("room_progress").upsert(
+  // Cleanup mounted ref on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  const saveRoseData = useCallback(async (data: RoseData) => {
+    const { error } = await supabase
+      .from("room_progress")
+      .upsert(
         {
           session_id: sessionId,
           room_name: "bedroom_day_0",
@@ -398,9 +411,7 @@ export default function ValentinesWeek({
         },
         { onConflict: "session_id,room_name" }
       )
-    },
-    [supabase, sessionId]
-  )
+  }, [supabase, sessionId])
 
   const handleSend = useCallback(async () => {
     const text = input.trim()
