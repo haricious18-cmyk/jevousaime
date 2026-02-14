@@ -137,7 +137,6 @@ const {
 ## ✅ Component Implementation
 
 ### Main Game Room - Valentines Week (`components/rooms/valentines-week.tsx`)
-- [x] Day 0: Rose blooming (5 notes each)
 - [x] Day 1: Proposal challenge
 - [x] Day 2: Chocolate memory matching
 - [x] Day 3: Teddy day stitching

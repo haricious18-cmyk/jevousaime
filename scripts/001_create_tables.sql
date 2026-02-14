@@ -2,8 +2,8 @@
 create table if not exists public.rooms (
   id uuid primary key default gen_random_uuid(),
   room_code text unique not null,
-  current_day integer not null default 0,
-  current_stage integer not null default 0,
+  current_day integer not null default 1,
+  current_stage integer not null default 1,
   love_meter integer not null default 0,
   is_complete boolean not null default false,
   created_at timestamptz not null default now(),

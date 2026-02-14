@@ -97,6 +97,37 @@ export function useSession() {
   const updatePhase = useCallback(
     async (phase: GamePhase) => {
       if (!session) return
+
+      if (phase === "bedroom") {
+        const { data: existingRoom } = await supabase
+          .from("rooms")
+          .select("id,current_day,current_stage")
+          .eq("room_code", session.room_code)
+          .maybeSingle()
+
+        if (!existingRoom) {
+          await supabase.from("rooms").insert({
+            room_code: session.room_code,
+            current_day: 1,
+            current_stage: 1,
+            updated_at: new Date().toISOString(),
+          })
+        } else {
+          const safeDay = Math.max(1, existingRoom.current_day ?? 1)
+          const safeStage = Math.max(1, existingRoom.current_stage ?? 1)
+          if (safeDay !== existingRoom.current_day || safeStage !== existingRoom.current_stage) {
+            await supabase
+              .from("rooms")
+              .update({
+                current_day: safeDay,
+                current_stage: safeStage,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existingRoom.id)
+          }
+        }
+      }
+
       const { data, error: updateError } = await supabase
         .from("sessions")
         .update({ current_phase: phase, updated_at: new Date().toISOString() })

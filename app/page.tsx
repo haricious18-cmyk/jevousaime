@@ -17,6 +17,8 @@ import WordsAndWishes from "@/components/rooms/words-and-wishes"
 import { useSession, type GamePhase } from "@/hooks/use-session"
 import { createClient } from "@/lib/supabase/client"
 
+const ROOM_NAV_ORDER: GamePhase[] = ["library", "constellation", "kintsugi", "bedroom", "words"]
+
 export default function Home() {
   const {
     session,
@@ -125,6 +127,18 @@ export default function Home() {
   const isInHallway = !!session && !!session.player2_name && phase === "lobby"
   const showStatusBar =
     !!session && !!session.player2_name && phase !== "waiting" && phase !== "door"
+  const currentRoomIndex = ROOM_NAV_ORDER.indexOf(phase)
+  const canNavigateRooms = currentRoomIndex !== -1
+
+  const goToPreviousRoom = useCallback(async () => {
+    if (currentRoomIndex <= 0) return
+    await updatePhase(ROOM_NAV_ORDER[currentRoomIndex - 1])
+  }, [currentRoomIndex, updatePhase])
+
+  const goToNextRoom = useCallback(async () => {
+    if (currentRoomIndex < 0 || currentRoomIndex >= ROOM_NAV_ORDER.length - 1) return
+    await updatePhase(ROOM_NAV_ORDER[currentRoomIndex + 1])
+  }, [currentRoomIndex, updatePhase])
 
   return (
     <main className="relative min-h-dvh">
@@ -138,6 +152,27 @@ export default function Home() {
           loveMeter={session.love_meter}
           currentRoom={isInHallway ? "hallway" : phase}
         />
+      )}
+
+      {showStatusBar && canNavigateRooms && (
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-background/85 px-2 py-2 backdrop-blur-md shadow-lg">
+            <button
+              onClick={() => void goToPreviousRoom()}
+              disabled={currentRoomIndex === 0}
+              className="rounded-full border border-border px-4 py-2 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary transition-colors"
+            >
+              Previous room
+            </button>
+            <button
+              onClick={() => void goToNextRoom()}
+              disabled={currentRoomIndex === ROOM_NAV_ORDER.length - 1}
+              className="rounded-full border border-border px-4 py-2 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary transition-colors"
+            >
+              Next room
+            </button>
+          </div>
+        </div>
       )}
 
       <AnimatePresence mode="wait">
@@ -231,9 +266,9 @@ export default function Home() {
         {phase === "words" && session && (
           <WordsAndWishes
             key="words"
-            playerName={playerName}
-            partnerName={partnerName}
-            onFinish={() => updatePhase("celebration")}
+            onComplete={() => {
+              void updatePhase("celebration")
+            }}
           />
         )}
 
