@@ -25,8 +25,10 @@ import { createClient } from "@/lib/supabase/client"
 
 const ROOM_SEQUENCE = ["library", "constellation", "kintsugi", "words"] as const
 
-// Rooms to hide on the home/login screen (doesn't affect progression)
-const HIDDEN_ON_HOME = new Set<string>(["library", "constellation", "kintsugi", "words"])
+// Rooms to hide on the home/login screen hallway (doesn't affect progression)
+// If user wants to hide all rooms from the hallway, set this to all room IDs
+// For now, leaving empty so all rooms show in hallway
+const HIDDEN_ON_HOME: string[] = []
 const ROOM_SET = new Set<string>(ROOM_SEQUENCE)
 const VALID_PHASES = new Set<string>([
   "lobby",
@@ -241,7 +243,7 @@ export default function Home() {
       )}
 
       <AnimatePresence mode="wait">
-        <ProgressSteps steps={ROOM_SEQUENCE.filter(r => !HIDDEN_ON_HOME.has(r)) as unknown as string[]} current={phase} />
+        <ProgressSteps steps={ROOM_SEQUENCE as unknown as string[]} current={phase} />
         {/* Phase: Lobby / Waiting */}
         {(!session || phase === "waiting") && (
           <Lobby
@@ -271,7 +273,7 @@ export default function Home() {
             completedRooms={completedRooms}
             unlockedRoomId={nextUnlockedRoom}
             onSelectRoom={handleSelectRoom}
-            hiddenRooms={[...HIDDEN_ON_HOME]}
+            hiddenRooms={HIDDEN_ON_HOME}
           />
         )}
 

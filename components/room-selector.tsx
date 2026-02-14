@@ -50,7 +50,7 @@ const rooms = [
   },
 ]
 
-export function RoomSelector({ completedRooms, unlockedRoomId, onSelectRoom }: RoomSelectorProps) {
+export function RoomSelector({ completedRooms, unlockedRoomId, onSelectRoom, hiddenRooms }: RoomSelectorProps) {
   return (
     <div className="relative z-10 flex flex-col items-center justify-center min-h-dvh px-4 pt-16">
       <motion.div
@@ -68,38 +68,38 @@ export function RoomSelector({ completedRooms, unlockedRoomId, onSelectRoom }: R
             const hiddenSet = new Set(hiddenRooms ?? [])
             const visibleRooms = rooms.filter((r) => !hiddenSet.has(r.id))
             return visibleRooms.map((room, i) => {
-            const isCompleted = completedRooms.includes(room.id)
-            const isLocked = !isCompleted && unlockedRoomId !== room.id
-            const Icon = room.icon
+              const isCompleted = completedRooms.includes(room.id)
+              const isLocked = !isCompleted && unlockedRoomId !== room.id
+              const Icon = room.icon
 
-            return (
-              <motion.button
-                key={room.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.15 }}
-                onClick={() => onSelectRoom(room.id)}
-                disabled={isCompleted || isLocked}
-                className={`flex items-start gap-4 p-5 rounded-xl border ${room.borderColor} ${room.bg} text-left transition-all hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100`}
-              >
-                <div className={`p-3 rounded-lg ${room.bg} ${room.color} shrink-0`}>
-                  {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
-                </div>
-                <div>
-                  <h3 className={`font-serif text-xl ${room.color} mb-1`}>
-                    {room.name}
-                    {isCompleted && (
-                      <span className="text-sm text-muted-foreground ml-2 font-sans">Completed</span>
-                    )}
-                    {isLocked && (
-                      <span className="text-sm text-muted-foreground ml-2 font-sans">Locked</span>
-                    )}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">{room.description}</p>
-                </div>
-              </motion.button>
-            )
-          })
+              return (
+                <motion.button
+                  key={room.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.15 }}
+                  onClick={() => onSelectRoom(room.id)}
+                  disabled={isCompleted || isLocked}
+                  className={`flex items-start gap-4 p-5 rounded-xl border ${room.borderColor} ${room.bg} text-left transition-all hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100`}
+                >
+                  <div className={`p-3 rounded-lg ${room.bg} ${room.color} shrink-0`}>
+                    {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                  </div>
+                  <div>
+                    <h3 className={`font-serif text-xl ${room.color} mb-1`}>
+                      {room.name}
+                      {isCompleted && (
+                        <span className="text-sm text-muted-foreground ml-2 font-sans">Completed</span>
+                      )}
+                      {isLocked && (
+                        <span className="text-sm text-muted-foreground ml-2 font-sans">Locked</span>
+                      )}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">{room.description}</p>
+                  </div>
+                </motion.button>
+              )
+            })
           })()}
         </div>
       </motion.div>
