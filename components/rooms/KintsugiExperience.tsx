@@ -356,18 +356,26 @@ export default function KintsugiExperience({
                 className="rounded-md border border-white/20 bg-black/20 px-2.5 py-1.5 text-xs text-white/90 hover:bg-black/30"
               >
                 <ArrowLeft className="h-4 w-4" />
-              <button
-                onClick={() => {
-                  if (!confirm("Seal this repair and move to the next room?")) return
-                  onComplete()
-                }}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
-                title="Go to next room"
-              >
-                Done
               </button>
-            {playerName} + {partnerName}
+            )}
+
+            <div className="text-sm font-medium">
+              {playerName} + {partnerName}
+            </div>
           </div>
+
+          {onComplete && (
+            <button
+              onClick={() => {
+                if (!confirm("Seal this repair and move to the next room?")) return
+                onComplete()
+              }}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+              title="Go to next room"
+            >
+              Done
+            </button>
+          )}
         </div>
 
         <div className="grid flex-1 gap-4 lg:grid-cols-[280px_1fr]">
@@ -375,6 +383,7 @@ export default function KintsugiExperience({
             <p className={`mb-3 text-xs uppercase tracking-[0.2em] ${allComplete ? "text-amber-900/70" : "text-amber-200/80"}`}>
               Cracks
             </p>
+
             <div className="space-y-2">
               {CRACKS.map((crack) => {
                 const progress = Math.round(progressByCrack[crack.id] ?? 0)
@@ -391,6 +400,7 @@ export default function KintsugiExperience({
                       <span className={`text-sm ${allComplete ? "text-amber-950" : "text-white"}`}>{crack.label}</span>
                       {done && <CheckCircle2 className="h-4 w-4 text-amber-400" />}
                     </div>
+
                     <div className="mt-2 h-1.5 rounded-full bg-black/25">
                       <motion.div
                         className="h-full rounded-full bg-amber-300"
@@ -398,17 +408,14 @@ export default function KintsugiExperience({
                         transition={{ type: "spring", stiffness: 140, damping: 20 }}
                       />
                     </div>
-                  <button
-                    onClick={() => {
-                      if (!confirm("Skip this room? Are you sure?")) return
-                      onComplete()
-                    }}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors"
-                    title="Skip this room"
-                  >
-                    <SkipForward className="w-3.5 h-3.5" />
-                    Skip
                   </button>
+                )
+              })}
+            </div>
+
+            {selectedCrack && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`mt-4 rounded-lg border p-3 ${allComplete ? "border-amber-300/70 bg-white/70" : "border-amber-300/40 bg-amber-100/10"}`}
               >
