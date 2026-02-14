@@ -26,23 +26,6 @@ import { createClient } from "@/lib/supabase/client"
 const ROOM_SEQUENCE = ["library", "constellation", "kintsugi", "words"] as const
 const ROOM_SET = new Set<string>(ROOM_SEQUENCE)
 const VALID_PHASES = new Set<string>([
-  function AudioToggle() {
-    // lightweight toggle that connects to AudioProvider if present
-    try {
-      const { muted, setMuted } = useAudio()
-      return (
-        <button
-          onClick={() => setMuted(!muted)}
-          aria-pressed={muted}
-          className="rounded-full bg-white/10 px-3 py-2 text-sm"
-        >
-          {muted ? "Unmute" : "Mute"}
-        </button>
-      )
-    } catch {
-      return null
-    }
-  }
   "lobby",
   "waiting",
   "door",
@@ -50,6 +33,24 @@ const VALID_PHASES = new Set<string>([
   "the_end",
   "celebration",
 ])
+
+function AudioToggle() {
+  // lightweight toggle that connects to AudioProvider if present
+  try {
+    const { muted, setMuted } = useAudio()
+    return (
+      <button
+        onClick={() => setMuted(!muted)}
+        aria-pressed={muted}
+        className="rounded-full bg-white/10 px-3 py-2 text-sm"
+      >
+        {muted ? "Unmute" : "Mute"}
+      </button>
+    )
+  } catch {
+    return null
+  }
+}
 
 export default function Home() {
   const {
@@ -332,6 +333,7 @@ export default function Home() {
           />
         )}
       </AnimatePresence>
-    </main>
+      </main>
+    </AudioProvider>
   )
 }
