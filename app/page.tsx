@@ -181,6 +181,20 @@ export default function Home() {
             >
               Next page
             </button>
+            <button
+              onClick={() => void goToNextPhase()}
+              disabled={currentPhaseIndex === PHASE_NAV_ORDER.length - 1}
+              className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-emerald-500/20 transition-colors"
+            >
+              Done
+            </button>
+            <button
+              onClick={() => void goToNextPhase()}
+              disabled={currentPhaseIndex === PHASE_NAV_ORDER.length - 1}
+              className="rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-500/20 transition-colors"
+            >
+              Skip
+            </button>
           </div>
         </div>
       )}

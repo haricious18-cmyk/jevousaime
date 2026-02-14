@@ -630,6 +630,22 @@ export default function ValentinesWeek({
           Next day
         </button>
       </div>
+      <div className="mx-auto mb-3 flex w-full max-w-5xl items-center justify-end gap-2">
+        <button
+          onClick={goToNextDay}
+          disabled={currentDay === 7}
+          className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-40 hover:bg-emerald-500/20 transition-colors"
+        >
+          Done day
+        </button>
+        <button
+          onClick={goToNextDay}
+          disabled={currentDay === 7}
+          className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-40 hover:bg-amber-500/20 transition-colors"
+        >
+          Skip day
+        </button>
+      </div>
 
       {paused && (
         <div className="mb-3 rounded-lg border border-amber-400/40 bg-amber-100/30 px-3 py-2 text-sm text-amber-800">

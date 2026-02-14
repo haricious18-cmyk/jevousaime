@@ -121,6 +121,20 @@ export function RoomSelector({ completedRooms, onSelectRoom }: RoomSelectorProps
             </button>
           </motion.div>
         )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="mt-3 text-center"
+        >
+          <button
+            onClick={() => onSelectRoom("bedroom")}
+            className="w-full px-8 py-3 rounded-lg border border-red-400/50 bg-red-500/15 text-red-100 font-semibold hover:bg-red-500/25 transition-all"
+          >
+            Move to Bedroom
+          </button>
+        </motion.div>
       </motion.div>
     </div>
   )
