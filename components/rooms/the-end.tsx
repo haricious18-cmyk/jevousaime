@@ -4,7 +4,6 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 import { Heart, Sparkles, Download, Printer } from "lucide-react"
 import { useEffect, useState, useRef, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
-import html2canvas from "html2canvas"
 
 type TheEndProps = {
   onComplete?: () => void
@@ -87,6 +86,7 @@ export default function WordsAndWishes({ onComplete, sessionId, player1Name = ""
   const downloadAsImage = async () => {
     if (!cardRef.current) return
     try {
+      const html2canvas = (await import("html2canvas")).default
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: "#ffffff",
         scale: 2,
